@@ -41,11 +41,11 @@ class AnnaDataset(Dataset):
         self.onehot_encoded = torch.FloatTensor(onehot_encoder.transform(integer_encoded))
         
     def __len__(self):
-        return int(np.floor(len(self.integer_encoded)/self.len_seq))
+        return len(self.integer_encoded)-self.len_seq-1
 
     def __getitem__(self, idx):
-        x = self.onehot_encoded[idx*self.len_seq:(idx+1)*self.len_seq,:]
-        y = self.integer_encoded[idx*self.len_seq+1:(idx+1)*self.len_seq+1]
+        x = self.onehot_encoded[idx:idx+self.len_seq,:]
+        y = self.integer_encoded[idx+self.len_seq+1]
         return  x,  y
     
 def InvertAnna(X):
