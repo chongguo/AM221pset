@@ -54,7 +54,7 @@ def nparam(ninputs,nhidden,noutputs):
 
 # ## Model
 
-# In[20]:
+# In[22]:
 
 
 # a prototype MLP
@@ -104,7 +104,7 @@ class MLP(nn.Module):
 #         # update the additional hidden layers
         self.hidden = self.update_hidden_layer()
 
-        self.y1 = self.decoder(self.hidden)
+        self.y1 = self.decoder(self.n_hidden_neurons,self.n_output)
         return self.y1 
 
 
@@ -137,7 +137,7 @@ testloader = torch.utils.data.DataLoader(testset, batch_size=BATCH_SIZE,
 
 # # Train on MNIST
 
-# In[21]:
+# In[23]:
 
 
 # training on MNIST
