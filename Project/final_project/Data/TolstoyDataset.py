@@ -7,8 +7,8 @@ import os
 import warnings
 warnings.filterwarnings("ignore")
 
-class AnnaDataset(Dataset):
-    """Anna Karenina dataset."""
+class TolstoyDataset(Dataset):
+    """Tolstoy dataset."""
 
     def __init__(self, len_seq):
         """
@@ -20,10 +20,13 @@ class AnnaDataset(Dataset):
         """
         self.len_seq = len_seq
         dir_path = os.path.dirname(os.path.realpath(__file__))
-        self.txt_file = os.path.join(dir_path,'anna.txt')
+        self.txt_file_1 = os.path.join(dir_path,'anna.txt')
+        self.txt_file_2 = os.path.join(dir_path,'war_and_peace.txt')
         # load the whole book
-        file = open(self.txt_file)
-        alltxt = file.read()
+        file_1 = open(self.txt_file_1)
+        alltxt = file_1.read()
+        file_2 = open(self.txt_file_2)
+        alltxt += file_2.read()
         # remove newline formmating
         alltxt = alltxt.replace("\n\n", "&").replace("\n", " ").replace("&", "\n")
         # define categories
@@ -48,12 +51,15 @@ class AnnaDataset(Dataset):
         y = self.integer_encoded[idx*self.len_seq+1:(idx+1)*self.len_seq+1]
         return  x,  y
     
-def InvertAnna(X):
+def InvertTolstoy(X):
     dir_path = os.path.dirname(os.path.realpath(__file__))
-    txt_file = os.path.join(dir_path,'anna.txt')
+    txt_file_1 = os.path.join(dir_path,'anna.txt')
+    txt_file_2 = os.path.join(dir_path,'war_and_peace.txt')
     # load the whole book
-    file = open(txt_file)
-    alltxt = file.read()
+    file_1 = open(txt_file_1)
+    alltxt = file_1.read()
+    file_2 = open(txt_file_2)
+    alltxt += file_2.read()
     # remove newline formmating
     alltxt = alltxt.replace("\n\n", "&").replace("\n", " ").replace("&", "\n")
     # define categories

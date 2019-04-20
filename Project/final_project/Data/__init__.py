@@ -1,1 +1,2 @@
-from .AnnaDataset import AnnaDataset
+from .AnnaDataset import *
+from .TolstoyDataset import *
