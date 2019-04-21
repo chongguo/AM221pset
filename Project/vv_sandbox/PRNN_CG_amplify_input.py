@@ -117,9 +117,9 @@ regval_P = []
 for r in tnrange(N_REPS):
     for k in tnrange(N_LAMBDA):
         reg_lambda = lambdas[k]
-        model_path = 'D:\chongguo\git\AM221pset\Project\Final Project\History\Lamb\model_P_rep_{}_lambda_{:d}_10.pt'.format(r,int(reg_lambda*10))
+        model_path = './model_P_rep_{}_lambda_{:d}_10.pt'.format(r,int(reg_lambda*10))
         model_P[k+r*N_LAMBDA] = PRNN(N_INPUTS,N_HIDDEN,N_OUTPUTS,1,device).to(device)
-        l2_reg = torch.Tensor(1,device=device)
+        l2_reg = torch.tensor(1,device=device)
         optimizer = torch.optim.SGD(model_P[k+r*N_LAMBDA].parameters(), lr=1e-2, momentum=0.9)
         criterion = nn.CrossEntropyLoss()
         
@@ -178,7 +178,7 @@ for r in tnrange(N_REPS):
         del(l2_reg,loss,optimizer,criterion,plist,param)
 
 
-# In[6]:
+# In[ ]:
 
 
 # regularizing random elements of the matrix
@@ -209,9 +209,9 @@ for r in tnrange(N_REPS):
     rndmask = rndmask.to(device)
     for k in tnrange(N_LAMBDA):
         reg_lambda = lambdas[k]
-        model_path = '/Users/vinayakvsv/am221/AM221pset/Project/vv_sandbox/mlp_experiments/model_P_rep_{}_lambda_{:d}_10.pt'.format(r,int(reg_lambda*10))
+        model_path = './model_P_rep_{}_lambda_{:d}_10.pt'.format(r,int(reg_lambda*10))
         model_R[k+r*N_LAMBDA] = PRNN(N_INPUTS,N_HIDDEN,N_OUTPUTS,1,device).to(device)
-        l2_reg = torch.Tensor(1,device=device)
+        l2_reg = torch.tensor(1,device=device)
         optimizer = torch.optim.SGD(model_R[k+r*N_LAMBDA].parameters(), lr=1e-2, momentum=0.9)
         criterion = nn.CrossEntropyLoss()
         
@@ -268,7 +268,7 @@ for r in tnrange(N_REPS):
         del(l2_reg,loss,optimizer,criterion,plist,param)
 
 
-# In[7]:
+# In[ ]:
 
 
 # regularizing off-digonal blocks of the partitioned RNN
@@ -283,9 +283,9 @@ regval_C = []
 for r in tnrange(N_REPS):
     for k in tnrange(N_LAMBDA):
         reg_lambda = lambdas[k]
-        model_path = 'D:\chongguo\git\AM221pset\Project\Final Project\History\Lamb\model_C_rep_{}_lambda_{:d}_10.pt'.format(r,int(reg_lambda*10))
+        model_path = './model_P_rep_{}_lambda_{:d}_10.pt'.format(r,int(reg_lambda*10))
         model_C[k+r*N_LAMBDA] = PRNN(N_INPUTS,N_HIDDEN,N_OUTPUTS,1,device).to(device)
-        l2_reg = torch.Tensor(1,device=device)
+        l2_reg = torch.tensor(1,device=device)
         optimizer = torch.optim.SGD(model_C[k+r*N_LAMBDA].parameters(), lr=1e-2, momentum=0.9)
         criterion = nn.CrossEntropyLoss()
         
@@ -343,7 +343,7 @@ for r in tnrange(N_REPS):
         del(l2_reg,loss,optimizer,criterion,plist,param)
 
 
-# In[31]:
+# In[ ]:
 
 
 plt.figure(figsize=(14,5))
@@ -378,7 +378,7 @@ plt.ylabel('Fraction')
 plt.show()
 
 
-# In[30]:
+# In[ ]:
 
 
 plt.figure(figsize=(14,5))
@@ -402,7 +402,7 @@ plt.ylabel('Accuracy on Test set')
 plt.show()
 
 
-# In[22]:
+# In[ ]:
 
 
 plt.hist(Phist_P[:,-1,-1,0],label='diagonal',normed=1, histtype='step',bins=np.arange(-0.5,0.5,0.005),log=True)
@@ -434,9 +434,15 @@ plt.xlabel('lambda')
 plt.show()
 
 
-# In[12]:
+# In[ ]:
 
 
 import pickle
 pickle.dump([lambdas,N_EPHOCS,N_REPS,Phist_P,Phist_C,Phist_R,regval_P,regval_C,regval_R,test_acc_P, train_acc_P,test_acc_C, train_acc_C,test_acc_R, train_acc_R,test_loss_P, train_loss_P,test_loss_C, train_loss_C,test_loss_R, train_loss_R], open( "sess_params_0404.pkl", "wb" ) )
+
+
+# In[ ]:
+
+
+
 
