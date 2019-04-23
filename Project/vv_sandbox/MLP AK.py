@@ -195,19 +195,19 @@ for r in tnrange(N_REPS): # loop over the number of reps
         del(l2_reg,loss,optimizer,criterion,plist,param)
 
 
-# In[ ]:
+# In[12]:
 
 
 #plt.imshow(x[0,:,:])
 #plt.plot(y_pred.detach().numpy()[0,:])
 #torch.max(y_pred,1)
-plt.plot(np.mean(test_acc_P,2))
+plt.plot(np.mean(test_acc_P,1))
 
 
-# In[ ]:
+# In[7]:
 
 
-def readtxt(txt_name = 'anna.txt')
+def readtxt(txt_name = 'anna.txt'):
     dir_path = os.path.dirname(os.path.realpath(__file__))
     txt_file = os.path.join(dir_path,txt_name)
     # load the whole book
@@ -223,7 +223,7 @@ def readtxt(txt_name = 'anna.txt')
     integer_encoded = torch.LongTensor(label_encoder.transform(list(alltxt)))
     return integer_encoded, categories
 
-def onehotencode(integer_encoded_batch,n_cat):
+# def onehotencode(integer_encoded_batch,n_cat):
     
 def get_next_batch(dat,batch_size):
     x_int = 
