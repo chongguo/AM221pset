@@ -26,6 +26,7 @@ class AnnaDataset(Dataset):
         alltxt = file.read()
         # remove newline formmating
         alltxt = alltxt.replace("\n\n", "&").replace("\n", " ").replace("&", "\n")
+        alltxt = alltxt[:round(len(alltxt)/10)]
         # define categories
         unique_chars = list(sorted(set(alltxt)))
         self.categories = unique_chars
@@ -45,7 +46,7 @@ class AnnaDataset(Dataset):
 
     def __getitem__(self, idx):
         x = self.onehot_encoded[idx:idx+self.len_seq,:]
-        y = self.integer_encoded[idx+self.len_seq+1]
+        y = self.integer_encoded[idx+self.len_seq]
         return  x,  y
     
 def InvertAnna(X):
@@ -59,6 +60,7 @@ def InvertAnna(X):
     # define categories
     unique_chars = list(sorted(set(alltxt)))
     categories = unique_chars
+    print(categories)
     # integer encode
     label_encoder = LabelEncoder()
     label_encoder.fit(categories)

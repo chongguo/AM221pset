@@ -5,11 +5,15 @@
 # This orchestra wrapper:
 # * Takes model parameters as input
 # * Takes a dataset as input (in this case, the MNIST dataset is default
+<<<<<<< HEAD
 # * Sends multiple instances of the regularization  
+=======
+>>>>>>> c769c2b03242f9415ba8d337db2d589252c2b1bc
 
 # In[ ]:
 
 
+<<<<<<< HEAD
 import os,sys,re
 from tqdm import tnrange
 import torch
@@ -79,5 +83,9 @@ def load_mnist ():
 
 
 def run_model ():
+=======
+# pseudocode for main
+def main ():
+>>>>>>> c769c2b03242f9415ba8d337db2d589252c2b1bc
     return()
 

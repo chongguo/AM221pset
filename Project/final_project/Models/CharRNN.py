@@ -18,7 +18,7 @@ class CharRNN(nn.Module):
             self.rnn = nn.LSTM(n_hidden, n_hidden, n_layers)
         self.device = device
         
-    def forward(self, x):
+    def forward(self, x, hidden):
         x=x.permute(1,0,2)
         hidden = torch.zeros(self.n_layers,x.shape[1],self.n_hidden).to(self.device)
         outhist, hidden = self.rnn(self.encoder(x),hidden)
