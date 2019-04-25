@@ -96,7 +96,8 @@ N_PARAMS = nparam_MLP(N_INPUTS,N_HIDDEN_NEURONS,N_OUTPUTS)
 gidx = int(N_HIDDEN_NEURONS/2)
 
 # regularization parameters
-lambdas = [0]#np.arange(0,1e-2,3e-3,dtype=np.float)
+# lambdas = np.arange(0,1e-2,3e-3,dtype=np.float)
+lambdas = np.arange(0,1e-1,1e-2,dtype=np.float) # full sweep
 N_LAMBDA = len(lambdas)
 
 # load data
@@ -202,6 +203,7 @@ for r in tnrange(N_REPS): # loop over the number of reps
 #plt.plot(y_pred.detach().numpy()[0,:])
 #torch.max(y_pred,1)
 plt.plot(np.mean(test_acc_P,1))
+plt.plot()
 
 
 # In[7]:
