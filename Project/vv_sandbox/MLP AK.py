@@ -62,9 +62,9 @@ class MLP(nn.Module):
         self.recurrent = nn.Linear(n_hidden_neurons,n_hidden_neurons) # recurrent connections
         self.decoder = nn.Linear(n_hidden_neurons, n_output) # decode output
                 
-    def forward(self, x0):
-        self.hidden1 = self.sig(self.encoder(x0))
-        self.hidden2 = self.sig(self.recurrent(self.hidden1))
+    def forward(self, x):
+        self.hidden1 = self.tanh(self.encoder(x))
+        self.hidden2 = self.tanh(self.recurrent(self.hidden1))
         self.output = self.decoder(self.hidden2)
         return self.output
     
@@ -79,6 +79,8 @@ from torch.utils.data import DataLoader # dataloader
 import sys
 sys.path.insert(0,'../final_project/Data/')
 from AnnaDataset_MLP import AnnaDataset, InvertAnna # import AK dataset
+import torchvision
+import torchvision.transforms as transforms
 
 # params
 BATCH_SIZE = 500 # how many batches we are running
@@ -88,16 +90,20 @@ N_INPUTS = 77*N_STEPS
 N_OUTPUTS = 77
 N_LAYERS = 2 # 2 hidden layers
 N_EPOCHS = 11 # how many training epocs
-learning_rates = np.asarray([1e-2]) # learning rates
-N_REPS = 2 # len(learning_rates) # the number of learning repetitions
+learning_rates = np.asarray([2]) # learning rates
+N_REPS = 1 # len(learning_rates) # the number of learning repetitions
 N_PARAMS = nparam_MLP(N_INPUTS,N_HIDDEN_NEURONS,N_OUTPUTS)
 gidx = int(N_HIDDEN_NEURONS/2)
 
 # regularization parameters
-lambdas = [0,5]#np.arange(0,1e-2,3e-3,dtype=np.float)
+lambdas = [0]#np.arange(0,1e-2,3e-3,dtype=np.float)
 N_LAMBDA = len(lambdas)
 
 # load data
+# list all transformations
+transform = transforms.Compose(
+    [transforms.Normalize((0,), (0.3,))])
+
 dataset = AnnaDataset(N_STEPS) # load the dataset
 trainloader = DataLoader(dataset, batch_size=BATCH_SIZE,
                         shuffle=False, num_workers=4) # create a DataLoader. We want a batch of BATCH_SIZE entries
@@ -105,7 +111,7 @@ testloader = DataLoader(dataset, batch_size=BATCH_SIZE,
                         shuffle=False, num_workers=4) # create a DataLoader. We want a batch of BATCH_SIZE entries
 
 
-# In[6]:
+# In[5]:
 
 
 # regularizing digonal blocks of the partitioned RNN
@@ -129,7 +135,7 @@ for r in tnrange(N_REPS): # loop over the number of reps
         
         # note that cross-entropy loss expects the indices of the class, not the one-hot. So, for A = [1,0,0,...] and B = [0,1,0,...], A is 0 and B is 1
         
-        for epoch in tnrange(N_EPOCHS): # for each training epoch
+        for epoch in range(N_EPOCHS): # for each training epoch
             nps = 0
             running_train_loss=0
             running_train_acc=0
@@ -145,6 +151,7 @@ for r in tnrange(N_REPS): # loop over the number of reps
             for i, (x, y_tar) in enumerate(trainloader):
                 l2_reg = 0
                 x, y_tar = x.to(device), y_tar.to(device) # x is the training set, y_tar is the output label
+                x = x-0.3
                 optimizer.zero_grad() # set gradients to 0
                 y_pred = model_P[k+r*N_LAMBDA](x.view(x.shape[0],x.shape[1]*x.shape[2])) # compute the prediction. 
                 loss = criterion(y_pred,y_tar) 
@@ -169,6 +176,7 @@ for r in tnrange(N_REPS): # loop over the number of reps
             model_P[k+r*N_LAMBDA].eval()
             for i,(x_test, y_test_tar) in enumerate(testloader):
                 x_test, y_test_tar = x_test.to(device), y_test_tar.to(device)
+                x_test = x_test - 0.3
                 y_test_pred = model_P[k+r*N_LAMBDA](x_test.view(x_test.shape[0],x_test.shape[1]*x_test.shape[2]))
                 loss = criterion(y_test_pred,y_test_tar)
                 
@@ -179,6 +187,7 @@ for r in tnrange(N_REPS): # loop over the number of reps
             train_acc_P[epoch,k,r] = running_train_acc/len(trainloader)
             test_loss_P[epoch,k,r] = running_test_loss/len(testloader)
             test_acc_P[epoch,k,r] = running_test_acc/len(testloader)
+            print(train_acc_P[epoch,k,r])
             
         # save the model and free the memory  
         torch.save(model_P[k+r*N_LAMBDA].state_dict(), model_path)
@@ -189,12 +198,38 @@ for r in tnrange(N_REPS): # loop over the number of reps
 # In[ ]:
 
 
-plt.plot(np.mean(train_acc_P,1))
-plt.show()
+#plt.imshow(x[0,:,:])
+#plt.plot(y_pred.detach().numpy()[0,:])
+#torch.max(y_pred,1)
+plt.plot(np.mean(test_acc_P,2))
 
 
 # In[ ]:
 
 
-get_batch():
+def readtxt(txt_name = 'anna.txt')
+    dir_path = os.path.dirname(os.path.realpath(__file__))
+    txt_file = os.path.join(dir_path,txt_name)
+    # load the whole book
+    file = open(self.txt_file)
+    alltxt = file.read()
+    # remove newline formmating
+    alltxt = alltxt.replace("\n\n", "&").replace("\n", " ").replace("&", "\n")
+    # define categories
+    categories = list(sorted(set(alltxt)))
+    # integer encode
+    label_encoder = LabelEncoder()
+    label_encoder.fit(categories)
+    integer_encoded = torch.LongTensor(label_encoder.transform(list(alltxt)))
+    return integer_encoded, categories
+
+def onehotencode(integer_encoded_batch,n_cat):
+    
+def get_next_batch(dat,batch_size):
+    x_int = 
+    y_int = 
+    x_hot = onehotencode(x_int): 
+    return x_hot, y_int 
+    
+    
 
