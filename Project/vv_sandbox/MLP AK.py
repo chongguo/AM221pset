@@ -45,7 +45,7 @@ def nparam_MLP(N_INPUTS,N_HIDDEN,N_OUTPUTS):
     return(sum([input_to_hidden1,hidden1_to_hidden2,hidden2_to_output]))
 
 
-# In[3]:
+# In[ ]:
 
 
 # a prototype MLP
@@ -70,7 +70,7 @@ class MLP(nn.Module):
     
 
 
-# In[4]:
+# In[ ]:
 
 
 # Test MLP on Anna Karenina
@@ -91,7 +91,7 @@ N_OUTPUTS = 77
 N_LAYERS = 2 # 2 hidden layers
 N_EPOCHS = 11 # how many training epocs
 learning_rates = np.asarray([2]) # learning rates
-N_REPS = 1 # len(learning_rates) # the number of learning repetitions
+N_REPS = 3 # len(learning_rates) # the number of learning repetitions
 N_PARAMS = nparam_MLP(N_INPUTS,N_HIDDEN_NEURONS,N_OUTPUTS)
 gidx = int(N_HIDDEN_NEURONS/2)
 
@@ -112,7 +112,7 @@ testloader = DataLoader(dataset, batch_size=BATCH_SIZE,
                         shuffle=False, num_workers=4) # create a DataLoader. We want a batch of BATCH_SIZE entries
 
 
-# In[5]:
+# In[ ]:
 
 
 # regularizing digonal blocks of the partitioned RNN
@@ -196,7 +196,7 @@ for r in tnrange(N_REPS): # loop over the number of reps
         del(l2_reg,loss,optimizer,criterion,plist,param)
 
 
-# In[12]:
+# In[ ]:
 
 
 #plt.imshow(x[0,:,:])
@@ -206,7 +206,7 @@ plt.plot(np.mean(test_acc_P,1))
 plt.plot()
 
 
-# In[7]:
+# In[ ]:
 
 
 def readtxt(txt_name = 'anna.txt'):
