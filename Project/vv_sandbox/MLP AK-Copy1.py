@@ -97,8 +97,7 @@ gidx = int(N_HIDDEN_NEURONS/2)
 
 # regularization parameters
 # lambdas = np.arange(0,1e-2,3e-3,dtype=np.float)
-lambdas = np.arange(0,1e-1,3e-2,dtype=np.float)
-# lambdas = np.arange(0,1e-1,1e-2,dtype=np.float) # full sweep
+lambdas = np.arange(0,1e-1,1e-2,dtype=np.float) # full sweep
 N_LAMBDA = len(lambdas)
 
 # load data
@@ -107,10 +106,6 @@ transform = transforms.Compose(
     [transforms.Normalize((0,), (0.3,))])
 
 dataset = AnnaDataset(N_STEPS) # load the dataset
-
-N_INPUTS = len(dataset.categories)*N_STEPS
-N_OUTPUTS = len(dataset.categories)
-
 trainloader = DataLoader(dataset, batch_size=BATCH_SIZE,
                         shuffle=False, num_workers=4) # create a DataLoader. We want a batch of BATCH_SIZE entries
 testloader = DataLoader(dataset, batch_size=BATCH_SIZE,
@@ -136,7 +131,6 @@ for r in tnrange(N_REPS): # loop over the number of reps
         model_path = './model_P_rep_{}_lambda_{:d}_10.pt'.format(r,int(reg_lambda*10)) # path to which we will save the model
         model_P[k+r*N_LAMBDA] = MLP(N_INPUTS,N_HIDDEN_NEURONS,N_OUTPUTS,device).to(device) # create the model
         l2_reg = torch.tensor(1,device=device) # create the l2 regularization value tensor
-#        optimizer = torch.optim.SGD(model_P[k+r*N_LAMBDA].parameters(), lr=1e-1, momentum=0.9) # set the function for SGD
         optimizer = torch.optim.SGD(model_P[k+r*N_LAMBDA].parameters(), lr=1e-2, momentum=0.9) # set the function for SGD
         criterion = nn.CrossEntropyLoss() # set the loss function
         
@@ -202,7 +196,7 @@ for r in tnrange(N_REPS): # loop over the number of reps
         del(l2_reg,loss,optimizer,criterion,plist,param)
 
 
-# In[ ]:
+# In[46]:
 
 
 #plt.imshow(x[0,:,:])
@@ -245,7 +239,7 @@ for i,j in enumerate(zip(np.mean(test_acc_P,2),np.mean(test_loss_P,2))):
 # plt.plot()
 
 
-# In[ ]:
+# In[47]:
 
 
 def readtxt(txt_name = 'anna.txt'):
@@ -275,7 +269,7 @@ def readtxt(txt_name = 'anna.txt'):
     
 
 
-# In[ ]:
+# In[14]:
 
 
 import pickle
@@ -312,7 +306,7 @@ pickle.dump([lambdas,N_EPOCHS,N_REPS,N_HIDDEN_NEURONS,learning_rates,N_REPS,N_PA
             open( "mlp_ak_set.pkl", "wb" ) )
 
 
-# In[ ]:
+# In[25]:
 
 
 # print(test_acc_P.shape)

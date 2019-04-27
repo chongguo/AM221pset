@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[1]:
+# In[15]:
 
 
 # imports
@@ -13,6 +13,8 @@ import torchvision
 import torchvision.transforms as transforms
 from torch.autograd import Variable
 import matplotlib.pyplot as plt
+from matplotlib import cm
+from matplotlib.colors import ListedColormap, LinearSegmentedColormap
 import numpy as np
 import gc
 import os
@@ -70,7 +72,7 @@ class MLP(nn.Module):
     
 
 
-# In[4]:
+# In[8]:
 
 
 # Test MLP on Anna Karenina
@@ -78,7 +80,8 @@ class MLP(nn.Module):
 from torch.utils.data import DataLoader # dataloader 
 import sys
 sys.path.insert(0,'../final_project/Data/')
-from AnnaDataset_MLP import AnnaDataset, InvertAnna # import AK dataset
+# from AnnaDataset_MLP import AnnaDataset, InvertAnna # import AK dataset
+from AnnaDataset import AnnaDataset, InvertAnna # import AK dataset
 import torchvision
 import torchvision.transforms as transforms
 
@@ -86,19 +89,16 @@ import torchvision.transforms as transforms
 BATCH_SIZE = 500 # how many batches we are running
 N_STEPS = 10 # How many characters are we inputting into the list at a time
 N_HIDDEN_NEURONS = 512 # how many neurons per hidden layer
-N_INPUTS = 77*N_STEPS
-N_OUTPUTS = 77
 N_LAYERS = 2 # 2 hidden layers
 N_EPOCHS = 11 # how many training epocs
 learning_rates = np.asarray([2]) # learning rates
-N_REPS = 3 # len(learning_rates) # the number of learning repetitions
+N_REPS = 1 # len(learning_rates) # the number of learning repetitions
 N_PARAMS = nparam_MLP(N_INPUTS,N_HIDDEN_NEURONS,N_OUTPUTS)
 gidx = int(N_HIDDEN_NEURONS/2)
 
 # regularization parameters
 # lambdas = np.arange(0,1e-2,3e-3,dtype=np.float)
-lambdas = np.arange(0,1e-1,3e-2,dtype=np.float)
-# lambdas = np.arange(0,1e-1,1e-2,dtype=np.float) # full sweep
+lambdas = np.arange(0,1,1e-1,dtype=np.float) # full sweep
 N_LAMBDA = len(lambdas)
 
 # load data
@@ -117,7 +117,13 @@ testloader = DataLoader(dataset, batch_size=BATCH_SIZE,
                         shuffle=False, num_workers=4) # create a DataLoader. We want a batch of BATCH_SIZE entries
 
 
-# In[5]:
+# In[9]:
+
+
+print(trainloader)
+
+
+# In[12]:
 
 
 # regularizing digonal blocks of the partitioned RNN
@@ -136,7 +142,6 @@ for r in tnrange(N_REPS): # loop over the number of reps
         model_path = './model_P_rep_{}_lambda_{:d}_10.pt'.format(r,int(reg_lambda*10)) # path to which we will save the model
         model_P[k+r*N_LAMBDA] = MLP(N_INPUTS,N_HIDDEN_NEURONS,N_OUTPUTS,device).to(device) # create the model
         l2_reg = torch.tensor(1,device=device) # create the l2 regularization value tensor
-#        optimizer = torch.optim.SGD(model_P[k+r*N_LAMBDA].parameters(), lr=1e-1, momentum=0.9) # set the function for SGD
         optimizer = torch.optim.SGD(model_P[k+r*N_LAMBDA].parameters(), lr=1e-2, momentum=0.9) # set the function for SGD
         criterion = nn.CrossEntropyLoss() # set the loss function
         
@@ -160,7 +165,10 @@ for r in tnrange(N_REPS): # loop over the number of reps
                 x, y_tar = x.to(device), y_tar.to(device) # x is the training set, y_tar is the output label
                 x = x-0.3
                 optimizer.zero_grad() # set gradients to 0
-                y_pred = model_P[k+r*N_LAMBDA](x.view(x.shape[0],x.shape[1]*x.shape[2])) # compute the prediction. 
+                # print(x.shape)
+                y_pred = model_P[k+r*N_LAMBDA](x.view(x.shape[0],x.shape[1]*x.shape[2])) # compute the prediction. # size mismatch
+                
+                
                 loss = criterion(y_pred,y_tar) 
                 for p,param in enumerate(model_P[k+r*N_LAMBDA].parameters()):
                     if param.requires_grad and len(param.shape)==2:
@@ -194,7 +202,14 @@ for r in tnrange(N_REPS): # loop over the number of reps
             train_acc_P[epoch,k,r] = running_train_acc/len(trainloader)
             test_loss_P[epoch,k,r] = running_test_loss/len(testloader)
             test_acc_P[epoch,k,r] = running_test_acc/len(testloader)
-            print(train_acc_P[epoch,k,r])
+            print("Epoch %d; rep %d; lambda %f; train accuracy %f; train loss %f; test accuracy %f; test loss %f"
+                  %(epoch,
+                    r,
+                    k,
+                    train_acc_P[epoch,k,r],
+                    train_loss_P[epoch,k,r],
+                    test_acc_P[epoch,k,r],
+                    test_loss_P[epoch,k,r]))
             
         # save the model and free the memory  
         torch.save(model_P[k+r*N_LAMBDA].state_dict(), model_path)
@@ -202,47 +217,104 @@ for r in tnrange(N_REPS): # loop over the number of reps
         del(l2_reg,loss,optimizer,criterion,plist,param)
 
 
-# In[ ]:
+# In[91]:
 
 
-#plt.imshow(x[0,:,:])
-#plt.plot(y_pred.detach().numpy()[0,:])
-#torch.max(y_pred,1)
-plt.figure(1)
-plt.plot(np.mean(test_acc_P,2))
-plt.xlabel("Epoch")
-plt.ylabel("Test accuracy")
-plt.plot()
 
-plt.figure(2)
-plt.plot(np.mean(test_loss_P,2))
-plt.xlabel("Epoch")
-plt.ylabel("Test loss")
-plt.plot()
+# number of lambdas
+n_epochs_plot,n_lambdas_plot = np.mean(test_acc_P,2).shape
+
+fig,ax = plt.subplots(1,2)
+fig.subplots_adjust(hspace=20.0)
+
+ax1,ax2 = ax
+cm1 = plt.get_cmap('copper') # plt.get_cmap('gist_rainbow') # plt.get_cmap('gist_rainbow')
+# fig = plt.figure()
+NUM_COLORS = n_lambdas_plot
+ax1.set_prop_cycle('color', [cm1(1.*i/NUM_COLORS) for i in range(NUM_COLORS)])
+ax2.set_prop_cycle('color', [cm1(1.*i/NUM_COLORS) for i in range(NUM_COLORS)])
+
+fig.suptitle("Epoch %d; reps %d; min/max lambda [%f,%f]"
+             %(epoch,
+               N_REPS,
+               min(lambdas),
+               max(lambdas)))
+
+# train accuracy %f; train loss %f; test accuracy %f; test loss %f"
+# train_acc_P[epoch,k,r],
+#                train_loss_P[epoch,k,r],
+#                test_acc_P[epoch,k,r],
+#                test_loss_P[epoch,k,r]
+            
+# ax = fig.add_subplot(111)
+for i in enumerate(lambdas):
+    ax1.plot(np.mean(test_acc_P,2)[:,i[0]],label=i[1],)
+    ax1.set_xlabel("Epoch")
+    ax1.set_ylabel("Test Accuracy")
+    
+# ax2 = fig.add_subplot(011)
+for i in enumerate(lambdas):
+    ax2.plot(np.mean(test_loss_P,2)[:,i[0]],label=i[1],)
+    ax2.set_xlabel("Epoch")
+    ax2.set_ylabel("Test Loss")
+ax2.legend(loc="upper right")
 
 
-for i,j in enumerate(zip(np.mean(test_acc_P,2),np.mean(test_loss_P,2))):
-    # plt.figure(i+3) # Here's the part I need, but numbering starts at 1!
-    fig,axs = plt.subplots(1,2)
-    fig.suptitle("Epoch %d"%i)
-    axs[0].plot(lambdas,j[0])
-    axs[0].set_xlabel("Lambda")
-    axs[0].set_ylabel("Test accuracy")
-    # axs[0].title("Epoch %d"%i)
-    axs[1].plot(lambdas,j[1])
-    axs[1].set_xlabel("Lambda")
-    axs[1].set_ylabel("Test loss")
-    # axs[1].title("Epoch %d"%i)
 
 
-# plt.plot(np.mean(test_acc_P,1))
-# plt.plot()
 
+# In[13]:
+
+
+# # create colormap
+
+
+
+# #plt.imshow(x[0,:,:])
+# #plt.plot(y_pred.detach().numpy()[0,:])
+# #torch.max(y_pred,1)
+# plt.figure(1)
 # plt.plot(np.mean(test_acc_P,2))
+# plt.xlabel("Epoch")
+# plt.ylabel("Test accuracy")
 # plt.plot()
 
-# plt.plot(np.mean(test_acc_P,3))
+# plt.figure(2)
+# plt.plot(np.mean(test_loss_P,2))
+# plt.xlabel("Epoch")
+# plt.ylabel("Test loss")
 # plt.plot()
+
+
+# for i,j in enumerate(zip(np.mean(test_acc_P,2),np.mean(test_loss_P,2))):
+#     # plt.figure(i+3) # Here's the part I need, but numbering starts at 1!
+#     fig,axs = plt.subplots(1,2)
+#     fig.suptitle("Epoch %d; reps %d; lambda %f; train accuracy %f; train loss %f; test accuracy %f; test loss %f"
+#                   %(epoch,
+#                     REPS,
+#                     k,
+#                     train_acc_P[epoch,k,r],
+#                     train_loss_P[epoch,k,r],
+#                     test_acc_P[epoch,k,r],
+#                     test_loss_P[epoch,k,r]))
+#     axs[0].plot(lambdas,j[0])
+#     axs[0].set_xlabel("Lambda")
+#     axs[0].set_ylabel("Test accuracy")
+#     # axs[0].title("Epoch %d"%i)
+#     axs[1].plot(lambdas,j[1])
+#     axs[1].set_xlabel("Lambda")
+#     axs[1].set_ylabel("Test loss")
+#     # axs[1].title("Epoch %d"%i)
+
+
+# # plt.plot(np.mean(test_acc_P,1))
+# # plt.plot()
+
+# # plt.plot(np.mean(test_acc_P,2))
+# # plt.plot()
+
+# # plt.plot(np.mean(test_acc_P,3))
+# # plt.plot()
 
 
 # In[ ]:
