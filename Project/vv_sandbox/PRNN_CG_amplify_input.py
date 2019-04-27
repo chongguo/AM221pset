@@ -15,6 +15,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import gc
 import os
+import pickle
 get_ipython().run_line_magic('matplotlib', 'inline')
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
@@ -94,7 +95,7 @@ N_INPUTS = 28
 N_HIDDEN = 112
 N_OUTPUTS = 10
 N_EPHOCS = 11
-N_REPS = 15
+N_REPS = 2 # 15
 N_PARAMS = nparam(N_INPUTS,N_HIDDEN,N_OUTPUTS)
 
 lambdas = np.arange(0,5.5,0.5,dtype=np.float)
@@ -102,7 +103,7 @@ N_LAMBDA = len(lambdas)
 gidx = int(N_HIDDEN/2)
 
 
-# In[5]:
+# In[ ]:
 
 
 # regularizing digonal blocks of the partitioned RNN
@@ -117,7 +118,7 @@ regval_P = []
 for r in tnrange(N_REPS):
     for k in tnrange(N_LAMBDA):
         reg_lambda = lambdas[k]
-        model_path = './model_P_rep_{}_lambda_{:d}_10.pt'.format(r,int(reg_lambda*10))
+        model_path = './models/amplify_input_P_input_model_P_rep_{}_lambda_{:d}_10.pt'.format(r,int(reg_lambda*10))
         model_P[k+r*N_LAMBDA] = PRNN(N_INPUTS,N_HIDDEN,N_OUTPUTS,1,device).to(device)
         l2_reg = torch.tensor(1,device=device)
         optimizer = torch.optim.SGD(model_P[k+r*N_LAMBDA].parameters(), lr=1e-2, momentum=0.9)
@@ -181,6 +182,17 @@ for r in tnrange(N_REPS):
 # In[ ]:
 
 
+pickle.dump([lambdas,N_EPHOCS,N_REPS,
+             Phist_P,
+             regval_P,
+             test_acc_P, train_acc_P,
+             test_loss_P, train_loss_P], 
+            open( "amplify_input_diag_sess_params_0404.pkl", "wb" ) )
+
+
+# In[ ]:
+
+
 # regularizing random elements of the matrix
 train_loss_R = np.zeros((N_EPHOCS,N_LAMBDA,N_REPS))
 train_acc_R = np.zeros((N_EPHOCS,N_LAMBDA,N_REPS))
@@ -209,7 +221,7 @@ for r in tnrange(N_REPS):
     rndmask = rndmask.to(device)
     for k in tnrange(N_LAMBDA):
         reg_lambda = lambdas[k]
-        model_path = './model_P_rep_{}_lambda_{:d}_10.pt'.format(r,int(reg_lambda*10))
+        model_path = './models/amplify_input_R_rep_{}_lambda_{:d}_10.pt'.format(r,int(reg_lambda*10))
         model_R[k+r*N_LAMBDA] = PRNN(N_INPUTS,N_HIDDEN,N_OUTPUTS,1,device).to(device)
         l2_reg = torch.tensor(1,device=device)
         optimizer = torch.optim.SGD(model_R[k+r*N_LAMBDA].parameters(), lr=1e-2, momentum=0.9)
@@ -271,6 +283,17 @@ for r in tnrange(N_REPS):
 # In[ ]:
 
 
+pickle.dump([lambdas,N_EPHOCS,N_REPS,
+             Phist_R,
+             regval_R,
+             test_acc_R, train_acc_R,
+             test_loss_R, train_loss_R], 
+            open( "amplify_input_random_sess_params_0404.pkl", "wb" ) )
+
+
+# In[ ]:
+
+
 # regularizing off-digonal blocks of the partitioned RNN
 train_loss_C = np.zeros((N_EPHOCS,N_LAMBDA,N_REPS))
 train_acc_C = np.zeros((N_EPHOCS,N_LAMBDA,N_REPS))
@@ -283,7 +306,7 @@ regval_C = []
 for r in tnrange(N_REPS):
     for k in tnrange(N_LAMBDA):
         reg_lambda = lambdas[k]
-        model_path = './model_P_rep_{}_lambda_{:d}_10.pt'.format(r,int(reg_lambda*10))
+        model_path = './models/amplify_input_C_rep_{}_lambda_{:d}_10.pt'.format(r,int(reg_lambda*10))
         model_C[k+r*N_LAMBDA] = PRNN(N_INPUTS,N_HIDDEN,N_OUTPUTS,1,device).to(device)
         l2_reg = torch.tensor(1,device=device)
         optimizer = torch.optim.SGD(model_C[k+r*N_LAMBDA].parameters(), lr=1e-2, momentum=0.9)
@@ -341,6 +364,35 @@ for r in tnrange(N_REPS):
         torch.save(model_C[k+r*N_LAMBDA].state_dict(), model_path)
         model_C[k+r*N_LAMBDA] = [None]
         del(l2_reg,loss,optimizer,criterion,plist,param)
+
+
+# In[ ]:
+
+
+pickle.dump([lambdas,N_EPHOCS,N_REPS,
+             Phist_C,
+             regval_C,
+             test_acc_C, train_acc_C,
+             test_loss_C, train_loss_C], 
+            open( "amplify_input_off_diag_sess_params_0404.pkl", "wb" ) )
+
+
+# In[ ]:
+
+
+
+# pickle.dump([lambdas,N_EPHOCS,N_REPS,Phist_P,Phist_C,Phist_R,regval_P,regval_C,regval_R,test_acc_P, train_acc_P,test_acc_C, train_acc_C,test_acc_R, train_acc_R,test_loss_P, train_loss_P,test_loss_C, train_loss_C,test_loss_R, train_loss_R], open( "sess_params_0404.pkl", "wb" ) )
+
+pickle.dump([lambdas,N_EPHOCS,N_REPS,
+             Phist_P,Phist_C,Phist_R,
+             regval_P,regval_C,regval_R,
+             test_acc_P, train_acc_P,
+             test_acc_C, train_acc_C,
+             test_acc_R, train_acc_R,
+             test_loss_P, train_loss_P,
+             test_loss_C, train_loss_C,
+             test_loss_R, train_loss_R], 
+            open( "amplify_input_sess_params_0404.pkl", "wb" ) )
 
 
 # In[ ]:
@@ -437,8 +489,8 @@ plt.show()
 # In[ ]:
 
 
-import pickle
-pickle.dump([lambdas,N_EPHOCS,N_REPS,Phist_P,Phist_C,Phist_R,regval_P,regval_C,regval_R,test_acc_P, train_acc_P,test_acc_C, train_acc_C,test_acc_R, train_acc_R,test_loss_P, train_loss_P,test_loss_C, train_loss_C,test_loss_R, train_loss_R], open( "sess_params_0404.pkl", "wb" ) )
+
+# pickle.dump([lambdas,N_EPHOCS,N_REPS,Phist_P,Phist_C,Phist_R,regval_P,regval_C,regval_R,test_acc_P, train_acc_P,test_acc_C, train_acc_C,test_acc_R, train_acc_R,test_loss_P, train_loss_P,test_loss_C, train_loss_C,test_loss_R, train_loss_R], open( "sess_params_0404.pkl", "wb" ) )
 
 
 # In[ ]:

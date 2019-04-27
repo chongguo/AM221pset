@@ -16,6 +16,7 @@ import numpy as np
 import gc
 import os
 get_ipython().run_line_magic('matplotlib', 'inline')
+import pickle
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 print(device)
@@ -94,8 +95,8 @@ N_STEPS = 28
 N_INPUTS = 28
 N_HIDDEN = 112
 N_OUTPUTS = 10
-N_EPHOCS = 11
-N_REPS = 15
+N_EPHOCS = 5
+N_REPS = 2 # 15
 N_PARAMS = nparam(N_INPUTS,N_HIDDEN,N_OUTPUTS)
 
 lambdas = np.arange(0,5.5,0.5,dtype=np.float)
@@ -103,7 +104,7 @@ N_LAMBDA = len(lambdas)
 gidx = int(N_HIDDEN/2)
 
 
-# In[6]:
+# In[5]:
 
 
 # regularizing digonal blocks of the partitioned RNN
@@ -118,7 +119,8 @@ regval_P = []
 for r in tnrange(N_REPS):
     for k in tnrange(N_LAMBDA):
         reg_lambda = lambdas[k]
-        model_path = 'D:\chongguo\git\AM221pset\Project\Final Project\History\Lamb\model_P_rep_{}_lambda_{:d}_10.pt'.format(r,int(reg_lambda*10))
+        # model_path = 'D:\chongguo\git\AM221pset\Project\Final Project\History\Lamb\model_P_rep_{}_lambda_{:d}_10.pt'.format(r,int(reg_lambda*10))
+        model_path = './models/amplify_input_nomem_P_model_P_rep_{}_lambda_{:d}_10.pt'.format(r,int(reg_lambda*10))
         model_P[k+r*N_LAMBDA] = PRNN(N_INPUTS,N_HIDDEN,N_OUTPUTS,1,device).to(device)
         l2_reg = torch.tensor(1,device=device)
         optimizer = torch.optim.SGD(model_P[k+r*N_LAMBDA].parameters(), lr=1e-2, momentum=0.9)
@@ -179,7 +181,19 @@ for r in tnrange(N_REPS):
         del(l2_reg,loss,optimizer,criterion,plist,param)
 
 
-# In[ ]:
+# In[6]:
+
+
+# save random elements
+pickle.dump([lambdas,N_EPHOCS,N_REPS,
+             Phist_P,
+             regval_P,
+             test_acc_P, train_acc_P,
+             test_loss_P, train_loss_P], 
+            open( "amplify_input_no_mem_diagonal_elements_sess_params_0404.pkl", "wb" ) )
+
+
+# In[7]:
 
 
 # regularizing random elements of the matrix
@@ -211,7 +225,7 @@ for r in tnrange(N_REPS):
     for k in tnrange(N_LAMBDA):
         reg_lambda = lambdas[k]
 #         model_path = '/Users/vinayakvsv/am221/AM221pset/Project/vv_sandbox/mlp_experiments/model_P_rep_{}_lambda_{:d}_10.pt'.format(r,int(reg_lambda*10))
-        model_path = './model_P_rep_{}_lambda_{:d}_10.pt'.format(r,int(reg_lambda*10))
+        model_path = './models/amplify_input_nomem_R_rep_{}_lambda_{:d}_10.pt'.format(r,int(reg_lambda*10))
         model_R[k+r*N_LAMBDA] = PRNN(N_INPUTS,N_HIDDEN,N_OUTPUTS,1,device).to(device)
         l2_reg = torch.tensor(1,device=device)
         optimizer = torch.optim.SGD(model_R[k+r*N_LAMBDA].parameters(), lr=1e-2, momentum=0.9)
@@ -270,7 +284,30 @@ for r in tnrange(N_REPS):
         del(l2_reg,loss,optimizer,criterion,plist,param)
 
 
-# In[ ]:
+# In[8]:
+
+
+# save random elements
+pickle.dump([lambdas,N_EPHOCS,N_REPS,
+             Phist_R,
+             regval_R,
+             test_acc_R, train_acc_R,
+             test_loss_R, train_loss_R], 
+            open( "amplify_input_no_mem_random_elements_sess_params_0404.pkl", "wb" ) )
+
+# pickle.dump([lambdas,N_EPHOCS,N_REPS,
+#              Phist_P,Phist_C,Phist_R,
+#              regval_P,regval_C,regval_R,
+#              test_acc_P, train_acc_P,
+#              test_acc_C, train_acc_C,
+#              test_acc_R, train_acc_R,
+#              test_loss_P, train_loss_P,
+#              test_loss_C, train_loss_C,
+#              test_loss_R, train_loss_R], 
+#             open( "sess_params_0404.pkl", "wb" ) )
+
+
+# In[9]:
 
 
 # regularizing off-digonal blocks of the partitioned RNN
@@ -286,7 +323,7 @@ for r in tnrange(N_REPS):
     for k in tnrange(N_LAMBDA):
         reg_lambda = lambdas[k]
 #         model_path = 'D:\chongguo\git\AM221pset\Project\Final Project\History\Lamb\model_C_rep_{}_lambda_{:d}_10.pt'.format(r,int(reg_lambda*10))
-        model_path = './model_P_rep_{}_lambda_{:d}_10.pt'.format(r,int(reg_lambda*10))
+        model_path = './models/amplify_input_nomem_C_rep_{}_lambda_{:d}_10.pt'.format(r,int(reg_lambda*10))
         model_C[k+r*N_LAMBDA] = PRNN(N_INPUTS,N_HIDDEN,N_OUTPUTS,1,device).to(device)
         l2_reg = torch.tensor(1,device=device)
         optimizer = torch.optim.SGD(model_C[k+r*N_LAMBDA].parameters(), lr=1e-2, momentum=0.9)
@@ -346,7 +383,36 @@ for r in tnrange(N_REPS):
         del(l2_reg,loss,optimizer,criterion,plist,param)
 
 
-# In[ ]:
+# In[10]:
+
+
+pickle.dump([lambdas,N_EPHOCS,N_REPS,
+             Phist_C,
+             regval_C,
+             test_acc_C, train_acc_C,
+             test_loss_C, train_loss_C], 
+            open( "amplify_input_no_mem_off_diag_sess_params_0404.pkl", "wb" ) )
+
+
+# In[11]:
+
+
+
+# pickle.dump([lambdas,N_EPHOCS,N_REPS,Phist_P,Phist_C,Phist_R,regval_P,regval_C,regval_R,test_acc_P, train_acc_P,test_acc_C, train_acc_C,test_acc_R, train_acc_R,test_loss_P, train_loss_P,test_loss_C, train_loss_C,test_loss_R, train_loss_R], open( "sess_params_0404.pkl", "wb" ) )
+
+pickle.dump([lambdas,N_EPHOCS,N_REPS,
+             Phist_P,Phist_C,Phist_R,
+             regval_P,regval_C,regval_R,
+             test_acc_P, train_acc_P,
+             test_acc_C, train_acc_C,
+             test_acc_R, train_acc_R,
+             test_loss_P, train_loss_P,
+             test_loss_C, train_loss_C,
+             test_loss_R, train_loss_R], 
+            open( "amplify_input_no_mem_sess_params_0404.pkl", "wb" ) )
+
+
+# In[12]:
 
 
 plt.figure(figsize=(14,5))
@@ -381,7 +447,7 @@ plt.ylabel('Fraction')
 plt.show()
 
 
-# In[ ]:
+# In[17]:
 
 
 plt.figure(figsize=(14,5))
@@ -389,7 +455,7 @@ plt.subplot(1,2,1)
 plt.plot(lambdas,np.mean(train_acc_P[-1,:,:].squeeze(),axis = 1).T,'-')
 plt.plot(lambdas,np.mean(train_acc_C[-1,:,:].squeeze(),axis = 1).T,'-')
 plt.plot(lambdas,np.mean(train_acc_R[-1,:,:].squeeze(),axis = 1).T,'-')
-plt.ylim((92,100))
+plt.ylim((0,100))
 plt.title('Train accuracy vs. regularization')
 plt.xlabel('lambda')
 plt.ylabel('Accuracy on Train set')
@@ -398,14 +464,14 @@ plt.plot(lambdas,np.mean(test_acc_P[-1,:,:].squeeze(),axis = 1).T,'-',label='dia
 plt.plot(lambdas,np.mean(test_acc_C[-1,:,:].squeeze(),axis = 1).T,'-',label='off-diagonal')
 plt.plot(lambdas,np.mean(test_acc_R[-1,:,:].squeeze(),axis = 1).T,'-',label='random')
 plt.legend()
-plt.ylim((92,100))
+plt.ylim((0,100))
 plt.title('Test accuracy vs. regularization')
 plt.xlabel('lambda')
 plt.ylabel('Accuracy on Test set')
 plt.show()
 
 
-# In[ ]:
+# In[16]:
 
 
 plt.hist(Phist_P[:,-1,-1,0],label='diagonal',normed=1, histtype='step',bins=np.arange(-0.5,0.5,0.005),log=True)
@@ -429,19 +495,12 @@ plt.subplot(1,2,2)
 plt.plot(lambdas,np.mean(Phist_P[1,-1,:,:],axis=1).squeeze(),'-',label='diagonal')
 plt.plot(lambdas,np.mean(Phist_C[1,-1,:,:],axis=1).squeeze(),'-',label='off-diagonal')
 plt.plot(lambdas,np.mean(Phist_R[1,-1,:,:],axis=1).squeeze(),'-',label='random')
-plt.ylim((2,3.5))
+plt.ylim((0,4))
 plt.legend()
 plt.title('Amplification vs. Regularization')
 plt.ylabel('Amplification')
 plt.xlabel('lambda')
 plt.show()
-
-
-# In[ ]:
-
-
-import pickle
-pickle.dump([lambdas,N_EPHOCS,N_REPS,Phist_P,Phist_C,Phist_R,regval_P,regval_C,regval_R,test_acc_P, train_acc_P,test_acc_C, train_acc_C,test_acc_R, train_acc_R,test_loss_P, train_loss_P,test_loss_C, train_loss_C,test_loss_R, train_loss_R], open( "sess_params_0404.pkl", "wb" ) )
 
 
 # In[ ]:
