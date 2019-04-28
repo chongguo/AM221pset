@@ -1,8 +1,3 @@
-#!/usr/bin/env python
-# coding: utf-8
-
-# In[1]:
-
 
 # imports
 from tqdm import tnrange
@@ -18,7 +13,7 @@ from matplotlib.colors import ListedColormap, LinearSegmentedColormap
 import numpy as np
 import gc
 import os
-get_ipython().run_line_magic('matplotlib', 'inline')
+%matplotlib inline  
 import datetime
 
 # alphabet
@@ -26,10 +21,6 @@ import string
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 print(device)
-
-
-# In[2]:
-
 
 def get_accuracy(logit, target):
     batch_size = len(target)
@@ -46,9 +37,6 @@ def nparam_MLP(N_INPUTS,N_HIDDEN,N_OUTPUTS):
     hidden1_to_hidden2 = (N_HIDDEN + 1)*N_HIDDEN
     hidden2_to_output = (N_OUTPUTS)*(N_HIDDEN+1)
     return(sum([input_to_hidden1,hidden1_to_hidden2,hidden2_to_output]))
-
-
-# In[3]:
 
 
 # a prototype MLP
@@ -72,10 +60,6 @@ class MLP(nn.Module):
         return self.output
     
 
-
-# In[4]:
-
-
 # Test MLP on Anna Karenina
 # Load Anna Karenina
 from torch.utils.data import DataLoader # dataloader 
@@ -91,16 +75,15 @@ BATCH_SIZE = 500 # how many batches we are running
 N_STEPS = 10 # How many characters are we inputting into the list at a time
 N_HIDDEN_NEURONS = 512 # how many neurons per hidden layer
 N_LAYERS = 2 # 2 hidden layers
-N_EPOCHS = 15 # how many training epocs
+N_EPOCHS = 10 # how many training epocs
 learning_rates = np.asarray([2]) # learning rates
-N_REPS = 1 # len(learning_rates) # the number of learning repetitions
+N_REPS = 2 # len(learning_rates) # the number of learning repetitions
 gidx = int(N_HIDDEN_NEURONS/2)
 
 # regularization parameters
 # lambdas = np.arange(0,1e-2,3e-3,dtype=np.float)
-lambdas = np.arange(0,1e-1,1e-2,dtype=np.float) # full sweep
-# lambdas = np.arange(0.4,1,0.45) # short sweep
-print(lambdas)
+# lambdas = np.arange(0,1e-1,1e-2,dtype=np.float) # full sweep
+lambdas = np.arange(0,1,0.4) # short sweep
 # lambdas = np.arange(0,1,1e-1,dtype=np.float) # full sweep
 N_LAMBDA = len(lambdas)
 
@@ -120,10 +103,6 @@ N_PARAMS = nparam_MLP(N_INPUTS,N_HIDDEN_NEURONS,N_OUTPUTS)
 #                         shuffle=False, num_workers=4) # create a DataLoader. We want a batch of BATCH_SIZE entries
 # testloader = DataLoader(dataset, batch_size=BATCH_SIZE,
 #                         shuffle=False, num_workers=4) # create a DataLoader. We want a batch of BATCH_SIZE entries
-
-
-# In[5]:
-
 
 # test the test-train-validate sampler
 # # test_split = torch.split(dataset.onehot_encoded,20,dim=0)
@@ -176,10 +155,6 @@ test_sampler = torch.utils.data.SequentialSampler(test_indices)
 
 # dataset_train,dataset_test = train_test_split(dataset,test_size=0.33, random_state=42)
 
-
-# In[6]:
-
-
 # train-test-validate split
 
 trainloader = DataLoader(dataset, batch_size=BATCH_SIZE,
@@ -191,19 +166,11 @@ testloader = DataLoader(dataset, batch_size=BATCH_SIZE,
                         shuffle=False, num_workers=4,
                         sampler = test_sampler) # create a DataLoader. We want a batch of BATCH_SIZE entries
 
-
-# In[7]:
-
-
 # modelkey = ''.join([str(np.random.randint(0,9)) for i in range(10)])
 
 runnow = datetime.datetime.now()
 modelkey = str(runnow.isoformat())
 print(modelkey)
-
-
-# In[ ]:
-
 
 # regularizing digonal blocks of the partitioned RNN
 # initialize arrays of loss values and weights over the number of epohcs, the number of lambdas we are testing, and the number of reps. 
@@ -302,10 +269,6 @@ for r in tnrange(N_REPS): # loop over the number of reps
         del(l2_reg,loss,optimizer,criterion,plist,param)
 
 
-# In[ ]:
-
-
-
 # number of lambdas
 n_epochs_plot,n_lambdas_plot = np.mean(test_acc_P,2).shape
 
@@ -345,16 +308,9 @@ for i in enumerate(lambdas):
 ax2.legend(loc="upper right")
 
 
-# In[ ]:
-
-
 # plt.plot(regval_P)
 regval_P_tensor = torch.tensor(regval_P).view(N_EPOCHS,len(lambdas),len(trainloader))
 plt.plot(regval_P)
-
-
-# In[ ]:
-
 
 # # create colormap
 
@@ -406,10 +362,6 @@ plt.plot(regval_P)
 # # plt.plot(np.mean(test_acc_P,3))
 # # plt.plot()
 
-
-# In[ ]:
-
-
 # def readtxt(txt_name = 'anna.txt'):
 #     dir_path = os.path.dirname(os.path.realpath(__file__))
 #     txt_file = os.path.join(dir_path,txt_name)
@@ -435,10 +387,6 @@ plt.plot(regval_P)
 # #     return x_hot, y_int 
     
     
-
-
-# In[ ]:
-
 
 import pickle
 
@@ -473,19 +421,10 @@ pickle.dump([lambdas,N_EPOCHS,N_REPS,N_HIDDEN_NEURONS,learning_rates,N_REPS,N_PA
              Phist_P], 
             open(modelkey+"_mlp_ak_quickset.pkl", "wb" ) )
 
-
-# In[ ]:
-
-
 # print(test_acc_P.shape)
 # plt.plot(np.mean(test_acc_P,2))
 # plt.plot()
 # print(np.mean(test_acc_P,1))
 # print(np.mean(test_acc_P,1).shape)
 
-
-# In[ ]:
-
-
 # Plot of tensor
-
