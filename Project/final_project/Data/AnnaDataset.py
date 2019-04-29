@@ -26,7 +26,7 @@ class AnnaDataset(Dataset):
         alltxt = file.read()
         # remove newline formmating
         alltxt = alltxt.replace("\n\n", "&").replace("\n", " ").replace("&", "\n")
-        alltxt = alltxt[:round(len(alltxt)/10)]
+        alltxt = alltxt[:round(len(alltxt)/50)]
         # define categories
         unique_chars = list(sorted(set(alltxt)))
         self.categories = unique_chars

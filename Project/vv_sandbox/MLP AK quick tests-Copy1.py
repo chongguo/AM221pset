@@ -82,7 +82,7 @@ from torch.utils.data import DataLoader # dataloader
 import sys
 sys.path.insert(0,'../final_project/Data/')
 from AnnaDataset_MLP import AnnaDataset, InvertAnna # import AK dataset
-# from AnnaDataset import AnnaDataset, InvertAnna # import AK dataset
+# from AnnaDataset import AnnaDataset, InvertAnna # import AK dataset # import a fraction
 import torchvision
 import torchvision.transforms as transforms
 
@@ -222,7 +222,7 @@ momentum = 0.9
 for r in tnrange(N_REPS): # loop over the number of reps
     for k in tnrange(N_LAMBDA): # loop over the number of different lambda values
         reg_lambda = lambdas[k] # set the regularization lambda
-        model_path = './models/model_'+modelkey+'_shortrun_P_rep_{}_lambda_{:d}_10.pt'.format(r,int(reg_lambda*10)) # path to which we will save the model
+        model_path = './models/model_'+modelkey+'_smallAK_P_rep_{}_lambda_{:d}_10.pt'.format(r,int(reg_lambda*10)) # path to which we will save the model
         model_P[k+r*N_LAMBDA] = MLP(N_INPUTS,N_HIDDEN_NEURONS,N_OUTPUTS,device).to(device) # create the model
         l2_reg = torch.tensor(1,device=device) # create the l2 regularization value tensor
         optimizer = torch.optim.SGD(model_P[k+r*N_LAMBDA].parameters(), lr=lr, momentum=momentum) # set the function for SGD
@@ -472,7 +472,7 @@ pickle.dump([lambdas,N_EPOCHS,N_REPS,N_HIDDEN_NEURONS,learning_rates,N_REPS,N_PA
              train_loss_P,train_acc_P,
              test_loss_P,test_acc_P,
              Phist_P], 
-            open(modelkey+"_mlp_ak_quickset.pkl", "wb" ) )
+            open(modelkey+"_mlp_ak_smallAK.pkl", "wb" ) )
 
 
 # In[ ]:
