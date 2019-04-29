@@ -24,6 +24,9 @@ import datetime
 # alphabet
 import string
 
+# pickle
+import pickle
+
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 print(device)
 
@@ -73,7 +76,7 @@ class MLP(nn.Module):
     
 
 
-# In[4]:
+# In[23]:
 
 
 # Test MLP on Anna Karenina
@@ -301,6 +304,13 @@ for r in tnrange(N_REPS): # loop over the number of reps
         torch.save(model_P[k+r*N_LAMBDA].state_dict(), model_path)
         model_P[k+r*N_LAMBDA] = [None]
         del(l2_reg,loss,optimizer,criterion,plist,param)
+        
+pickle.dump([lambdas,N_EPOCHS,N_REPS,N_HIDDEN_NEURONS,learning_rates,N_REPS,N_PARAMS,
+             model_P,regval_P,
+             train_loss_P,train_acc_P,
+             test_loss_P,test_acc_P,
+             Phist_P], 
+            open(modelkey+"_mlp_ak_quickset.pkl", "wb" ) )
 
 
 # In[10]:
@@ -438,7 +448,7 @@ plt.plot(regval_P)
     
 
 
-# In[ ]:
+# In[71]:
 
 
 import pickle
@@ -468,7 +478,7 @@ import pickle
 
 
 pickle.dump([lambdas,N_EPOCHS,N_REPS,N_HIDDEN_NEURONS,learning_rates,N_REPS,N_PARAMS,
-             model_P,regval_P,
+             regval_P,
              train_loss_P,train_acc_P,
              test_loss_P,test_acc_P,
              Phist_P], 
@@ -485,8 +495,261 @@ pickle.dump([lambdas,N_EPOCHS,N_REPS,N_HIDDEN_NEURONS,learning_rates,N_REPS,N_PA
 # print(np.mean(test_acc_P,1).shape)
 
 
+# # Plot past run
+
+# In[38]:
+
+
+# load
+import pandas as pd
+pastrundat = pd.read_csv("../vv_sandbox/mlp_fullak.txt",sep="\t")
+
+
+# In[44]:
+
+
+pastrundat
+
+
+# In[52]:
+
+
+test_epochs_P = pastrundat.loc[:,"Epoch"]
+test_regval_P = pastrundat.loc[:,"regval_P"]
+test_test_acc_P = pastrundat.loc[:,"test_acc_P"]
+test_test_loss_P = pastrundat.loc[:,"test_loss_P"]
+test_train_acc_P = pastrundat.loc[:,"train_acc_P"]
+test_train_loss_P = pastrundat.loc[:,"train_loss_P"]
+pd_lambdas = pastrundat.loc[:,"lambda"]
+
+
+# In[62]:
+
+
+# plt.plot(test_epochs_P,test_train_loss_P)
+# convert into 10 x 50 ndarray
+# test ndarray_train_loss_P
+# lambdas = np.arange(0,1e-1,1e-2,dtype=np.float) # full sweep
+
+ndarray_train_loss_P = np.empty((10,50))
+ndarray_train_acc_P = np.empty((10,50))
+ndarray_test_loss_P = np.empty((10,50))
+ndarray_test_acc_P = np.empty((10,50))
+ndarray_regval_P = np.empty((10,50))
+ndarray_lambdas = np.empty((10,50))
+
+for i in range(len(lambdas)):
+    for j in range(N_EPOCHS):
+        ndarray_train_loss_P[i,j] = test_train_loss_P.iloc[i*N_EPOCHS+j]
+#         print(test_train_loss_P.iloc[i*N_EPOCHS+j])
+        ndarray_train_acc_P[i,j] = test_train_acc_P.iloc[i*N_EPOCHS+j]
+        ndarray_test_loss_P[i,j] = test_test_loss_P.iloc[i*N_EPOCHS+j]
+        ndarray_test_acc_P[i,j] = test_test_acc_P.iloc[i*N_EPOCHS+j]
+        ndarray_regval_P[i,j] = test_regval_P.iloc[i*N_EPOCHS+j]
+        ndarray_lambdas[i,j] = pd_lambdas.iloc[i*N_EPOCHS+j]
+    
+# ndarray_train_loss_P = np.ndarray(test_train_loss_P)# .resize((10,50))
+ndarray_train_loss_P = np.transpose(ndarray_train_loss_P)
+ndarray_train_acc_P = np.transpose(ndarray_train_acc_P)
+ndarray_test_loss_P = np.transpose(ndarray_test_loss_P)
+ndarray_test_acc_P = np.transpose(ndarray_test_acc_P)
+ndarray_regval_P = np.transpose(ndarray_regval_P)
+# ndarray_lambda = pd_lambdas.values
+
+plt.plot(ndarray_test_loss_P)
+
+
+# In[63]:
+
+
+lambdas
+
+
+# In[67]:
+
+
+
+# number of lambdas
+# n_epochs_plot,n_lambdas_plot = np.mean(test_acc_P,2).shape
+
+fig,ax = plt.subplots(1,2)
+fig.subplots_adjust(hspace=20.0)
+
+ax1,ax2 = ax
+cm1 = plt.get_cmap('copper') # plt.get_cmap('gist_rainbow') # plt.get_cmap('gist_rainbow')
+# fig = plt.figure()
+NUM_COLORS = len(lambdas)
+ax1.set_prop_cycle('color', [cm1(1.*i/NUM_COLORS) for i in range(NUM_COLORS)])
+ax2.set_prop_cycle('color', [cm1(1.*i/NUM_COLORS) for i in range(NUM_COLORS)])
+ax3.set_prop_cycle('color', [cm1(1.*i/NUM_COLORS) for i in range(NUM_COLORS)])
+ax4.set_prop_cycle('color', [cm1(1.*i/NUM_COLORS) for i in range(NUM_COLORS)])
+
+fig.suptitle("Epochs: %d; reps %d; min/max lambda [%f,%f]"
+             %(N_EPOCHS,
+               N_REPS,
+               min(lambdas),
+               max(lambdas)))
+fig.text(0.5, 0.04, 'Epoch', ha='center')
+
+# plot train accuracy
+ax1.plot(ndarray_train_loss_P,)
+ax1.set_ylabel("Train Accuracy")
+ax2.plot(ndarray_train_acc_P,)
+ax2.set_ylabel("Train Loss")
+
+# # ax = fig.add_subplot(111)
+# for i in enumerate(lambdas):
+#     ax1.plot(np.mean(train_acc_P,2)[:,i[0]],label=i[1],)
+#     ax1.set_xlabel("Epoch")
+#     ax1.set_ylabel("Train Accuracy")
+
+# for i in enumerate(lambdas):
+#     ax2.plot(np.mean(test_acc_P,2)[:,i[0]],label=i[1],)
+#     ax2.set_xlabel("Epoch")
+#     ax2.set_ylabel("Test Accuracy")
+
+# for i in enumerate(lambdas):
+#     ax3.plot(np.mean(train_loss_P,2)[:,i[0]],label=i[1],)
+#     ax3.set_xlabel("Epoch")
+#     ax3.set_ylabel("Train Loss")
+    
+# # ax2 = fig.add_subplot(011)
+# for i in enumerate(lambdas):
+#     ax4.plot(np.mean(test_loss_P,2)[:,i[0]],label=i[1],)
+#     ax4.set_xlabel("Epoch")
+#     ax4.set_ylabel("Test Loss")
+    
+ax2.legend(loc="upper right")
+
+
+
+# In[69]:
+
+
+
+# number of lambdas
+# n_epochs_plot,n_lambdas_plot = np.mean(test_acc_P,2).shape
+
+fig,ax = plt.subplots(1,2)
+fig.subplots_adjust(hspace=20.0)
+
+ax1,ax2 = ax
+cm1 = plt.get_cmap('copper') # plt.get_cmap('gist_rainbow') # plt.get_cmap('gist_rainbow')
+# fig = plt.figure()
+NUM_COLORS = len(lambdas)
+ax1.set_prop_cycle('color', [cm1(1.*i/NUM_COLORS) for i in range(NUM_COLORS)])
+ax2.set_prop_cycle('color', [cm1(1.*i/NUM_COLORS) for i in range(NUM_COLORS)])
+ax3.set_prop_cycle('color', [cm1(1.*i/NUM_COLORS) for i in range(NUM_COLORS)])
+ax4.set_prop_cycle('color', [cm1(1.*i/NUM_COLORS) for i in range(NUM_COLORS)])
+
+fig.suptitle("Epochs: %d; reps %d; min/max lambda [%f,%f]"
+             %(N_EPOCHS,
+               N_REPS,
+               min(lambdas),
+               max(lambdas)))
+fig.text(0.5, 0.04, 'Epoch', ha='center')
+
+# plot train accuracy
+ax1.plot(ndarray_test_loss_P,)
+ax1.set_ylabel("Test Accuracy")
+ax2.plot(ndarray_test_acc_P,)
+ax2.set_ylabel("Test Loss")
+    
+ax2.legend(loc="upper right")
+
+
+
+# In[74]:
+
+
+# ndarray_train_loss_P = np.transpose(ndarray_train_loss_P)
+# ndarray_train_acc_P = np.transpose(ndarray_train_acc_P)
+# ndarray_test_loss_P = np.transpose(ndarray_test_loss_P)
+# ndarray_test_acc_P = np.transpose(ndarray_test_acc_P)
+# ndarray_regval_P = np.transpose(ndarray_regval_P)
+
+
+pickle.dump([lambdas,N_EPOCHS,N_REPS,N_HIDDEN_NEURONS,learning_rates,N_REPS,N_PARAMS,
+             ndarray_regval_P,
+             ndarray_train_loss_P,ndarray_train_acc_P,
+             ndarray_test_loss_P,ndarray_test_acc_P], 
+            open("mlp_fullsweep_ak_quickset.pkl", "wb" ) )
+
+
+# In[6]:
+
+
+# model 2019-04-28T16:35:45.389754
+modelstr = "2019-04-28T16:35:45.389754"
+modelname = "./"+modelstr+"_mlp_ak_quickset.pkl"
+
+# load pickle
+with open(modelname, 'rb') as file:
+    pastrun = pickle.load(file)
+    [lambdas,N_EPOCHS,N_REPS,N_HIDDEN_NEURONS,learning_rates,N_REPS,N_PARAMS,
+     model_P,regval_P,
+     train_loss_P,train_acc_P,
+     test_loss_P,test_acc_P,
+     Phist_P]  = pastrun
+
+# plot train and test
+
+
 # In[ ]:
 
 
-# Plot of tensor
+
+# number of lambdas
+n_epochs_plot,n_lambdas_plot = np.mean(test_acc_P,2).shape
+
+fig,ax = plt.subplots(2,2)
+fig.subplots_adjust(hspace=20.0)
+
+ax1,ax2,ax3,ax4 = ax
+cm1 = plt.get_cmap('copper') # plt.get_cmap('gist_rainbow') # plt.get_cmap('gist_rainbow')
+# fig = plt.figure()
+NUM_COLORS = n_lambdas_plot
+ax1.set_prop_cycle('color', [cm1(1.*i/NUM_COLORS) for i in range(NUM_COLORS)])
+ax2.set_prop_cycle('color', [cm1(1.*i/NUM_COLORS) for i in range(NUM_COLORS)])
+ax3.set_prop_cycle('color', [cm1(1.*i/NUM_COLORS) for i in range(NUM_COLORS)])
+ax4.set_prop_cycle('color', [cm1(1.*i/NUM_COLORS) for i in range(NUM_COLORS)])
+
+fig.suptitle("Epoch %d; reps %d; min/max lambda [%f,%f]"
+             %(epoch,
+               N_REPS,
+               min(lambdas),
+               max(lambdas)))
+            
+# ax = fig.add_subplot(111)
+for i in enumerate(lambdas):
+    ax1.plot(np.mean(train_acc_P,2)[:,i[0]],label=i[1],)
+    ax1.set_xlabel("Epoch")
+    ax1.set_ylabel("Train Accuracy")
+
+for i in enumerate(lambdas):
+    ax2.plot(np.mean(test_acc_P,2)[:,i[0]],label=i[1],)
+    ax2.set_xlabel("Epoch")
+    ax2.set_ylabel("Test Accuracy")
+
+for i in enumerate(lambdas):
+    ax3.plot(np.mean(train_loss_P,2)[:,i[0]],label=i[1],)
+    ax3.set_xlabel("Epoch")
+    ax3.set_ylabel("Train Loss")
+    
+# ax2 = fig.add_subplot(011)
+for i in enumerate(lambdas):
+    ax4.plot(np.mean(test_loss_P,2)[:,i[0]],label=i[1],)
+    ax4.set_xlabel("Epoch")
+    ax4.set_ylabel("Test Loss")
+    
+ax2.legend(loc="upper right")
+
+
+
+# In[ ]:
+
+
+# plt.plot(regval_P)
+# regval_P_tensor = torch.tensor(regval_P).view(N_EPOCHS,len(lambdas),len(trainloader))
+plt.plot(regval_P)
 
